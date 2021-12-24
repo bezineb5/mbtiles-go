@@ -100,11 +100,19 @@ func Open(path string) (*MBtiles, error) {
 		return nil, err
 	}
 
+	db.tileStmt, err = con.Prepare("select tile_data from tiles where zoom_level = ? and tile_column = ? and tile_row = ?")
+	if err != nil {
+		return nil, err
+	}
+
 	return db, nil
 }
 
 // Close closes a MBtiles file
 func (db *MBtiles) Close() {
+	if db.tileStmt != nil {
+		db.tileStmt.Close()
+	}
 	if db.pool != nil {
 		db.pool.Close()
 	}
@@ -113,17 +121,11 @@ func (db *MBtiles) Close() {
 // ReadTile reads a tile for z, x, y into the provided *[]byte.
 // data will be nil if the tile does not exist in the database
 func (db *MBtiles) ReadTile(z int64, x int64, y int64, data *[]byte) error {
-	if db == nil || db.pool == nil {
+	if db == nil || db.tileStmt == nil {
 		return errors.New("cannot read tile from closed mbtiles database")
 	}
 
-	con, err := db.getConnection(context.TODO())
-	defer db.closeConnection(con)
-	if err != nil {
-		return err
-	}
-
-	err = con.QueryRow("select tile_data from tiles where zoom_level = ? and tile_column = ? and tile_row = ?", z, x, y).Scan(data)
+	err := db.tileStmt.QueryRow(z, x, y).Scan(data)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			*data = nil // If this tile does not exist in the database, return empty bytes
