@@ -76,10 +76,10 @@ func Open(path string) (*MBtiles, error) {
 	}
 
 	con, err := db.getConnection(context.TODO())
+	defer db.closeConnection(con)
 	if err != nil {
 		return nil, err
 	}
-	defer db.closeConnection(con)
 
 	err = validateRequiredTables(con)
 	if err != nil {
@@ -137,10 +137,10 @@ func (db *MBtiles) ReadMetadata() (map[string]interface{}, error) {
 	}
 
 	con, err := db.getConnection(context.TODO())
+	defer db.closeConnection(con)
 	if err != nil {
 		return nil, err
 	}
-	defer db.closeConnection(con)
 
 	var (
 		key   string
