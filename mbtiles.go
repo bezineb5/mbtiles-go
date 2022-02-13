@@ -54,14 +54,14 @@ func Open(path string) (*MBtiles, error) {
 	stat, err := os.Stat(path)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return nil, fmt.Errorf("Path does not exist: %q", path)
+			return nil, fmt.Errorf("path does not exist: %q", path)
 		}
 		return nil, err
 	}
 
 	// there must not be a corresponding *-journal file (tileset is still being created)
 	if _, err := os.Stat(path + "-journal"); err == nil {
-		return nil, fmt.Errorf("Refusing to open mbtiles file with associated -journal file (incomplete tileset)")
+		return nil, fmt.Errorf("refusing to open mbtiles file with associated -journal file (incomplete tileset)")
 	}
 
 	pool, err := sql.Open("sqlite", path)
@@ -75,7 +75,7 @@ func Open(path string) (*MBtiles, error) {
 		timestamp: stat.ModTime().Round(time.Second),
 	}
 
-	con, err := db.getConnection(nil)
+	con, err := db.getConnection(context.TODO())
 	if err != nil {
 		return nil, err
 	}
@@ -133,10 +133,10 @@ func (db *MBtiles) ReadTile(z int64, x int64, y int64, data *[]byte) error {
 // the appropriate type
 func (db *MBtiles) ReadMetadata() (map[string]interface{}, error) {
 	if db == nil || db.pool == nil {
-		return nil, errors.New("Cannot read tile from closed mbtiles database")
+		return nil, errors.New("cannot read tile from closed mbtiles database")
 	}
 
-	con, err := db.getConnection(nil)
+	con, err := db.getConnection(context.TODO())
 	if err != nil {
 		return nil, err
 	}
@@ -235,7 +235,7 @@ func validateRequiredTables(con *sql.DB) error {
 	}
 
 	if tableCount < 2 {
-		return errors.New("Missing one or more required tables: tiles, metadata")
+		return errors.New("missing one or more required tables: tiles, metadata")
 	}
 
 	return nil
