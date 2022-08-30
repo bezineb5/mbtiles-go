@@ -84,26 +84,16 @@ func Open(path string) (*MBtiles, error) {
 
 	err = validateRequiredTables(con)
 	if err != nil {
-		db.closeConnection(con)
-		con = nil
 		return nil, err
 	}
 
 	format, tilesize, err := getTileFormatAndSize(con)
 	if err != nil {
-		db.closeConnection(con)
-		con = nil
-		defer db.Close()
 		return nil, err
 	}
 
 	db.format = format
 	db.tilesize = tilesize
-
-	db.tileStmt, err = con.Prepare("select tile_data from tiles where zoom_level = ? and tile_column = ? and tile_row = ?")
-	if err != nil {
-		return nil, err
-	}
 
 	db.tileStmt, err = con.Prepare("select tile_data from tiles where zoom_level = ? and tile_column = ? and tile_row = ?")
 	if err != nil {
